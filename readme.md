@@ -21,3 +21,5 @@ generate from json
 
 DotProduct --> similiar 
 find ans--> most similiar at zero the index
+
+## vector DB : chroma
