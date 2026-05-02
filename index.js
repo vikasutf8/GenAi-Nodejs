@@ -16,13 +16,32 @@ const db = new CloudClient({
 })
 
 async function dbconnection(){
-    await db.client.createCollection({
+    const collection =await db.client.createCollection({
     name: 'vikash',
     // metadata: {
     //     description: 'This is a collection for storing embeddings related to Vikash Kumar Singh Yadav',
     // },
     });
+    collection.add({ 
+        ids: ['1'],
+        embeddings: [[0.1, 0.2, 0.3, 0.4, 0.5]],
+        metadatas: [{ name: 'Vikash Kumar Singh Yadav', description: 'This is a sample embedding for Vikash Kumar Singh Yadav' }],
+        documents: ['This is a sample document for Vikash Kumar Singh Yadav'],
+    });
 }
+
+async function findsimilar(){
+    const collection = await db.client.getCollection('vikash');
+    const queryEmbedding = [0.1, 0.2, 0.3, 0.4, 0.5];
+    const results = await collection.query({
+        query_embeddings: [queryEmbedding],
+        n_results: 1, 
+    });
+    console.log(results);
+}
+
+// dbconnection();
+findsimilar();
 
 
 const client = new OpenAI({ apiKey: openai });
