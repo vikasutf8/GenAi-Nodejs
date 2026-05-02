@@ -5,19 +5,37 @@ import { encoding_for_model } from 'tiktoken';
 dotenv.config();
 
 const openai = process.env.OPENAI_API_KEY  || null;
-console.log(openai);
-
-
 const client = new OpenAI({ apiKey: openai });
 
+//2 : maintain context of conversation.
+const context = [
+    {
+        role: 'system',
+        content: 'You are a helpful assistant.'
+    }
+];
 
-const prompt = 'What is the capital of France?';
+
+
+function isAnswerComplete(answer) {
+const prompt = answer;
 const model = 'gpt-3.5-turbo';
 const role = 'user';
 
-//calculate tokens of specific input wrt to model that i using ...as role also defined 
+// if context.length > 10, remove the oldest message
+if(context.length > 10) {
+    context.shift();
+}
+
+//set question in context
+context.push({
+    role: role,
+    content: prompt
+});
+
+
 const encoding = encoding_for_model(model); // 
-const tokens = encoding.encode(prompt); // get tokens for the prompt ONLY 'What is the capital of France?'
+const tokens = encoding.encode(prompt); 
 
 console.log(`Number of tokens: ${tokens.length}`);
 
@@ -29,15 +47,28 @@ const response= await client.responses.create({
             role: role,
             content: prompt
         },
-        // {
-        //     role: 'system',
-        //     content: 'The capital of France is Paris.'
-        // }
     ],
-    temperature: 0.7, //bydefualt=1.0, higher values = more creative responses
-    max_output_tokens:20, //bydefualt=2048, maximum number of tokens in the responses
-    store_history: false, //bydefualt=true, whether to store the conversation history for future reference
-    store: false, //bydefualt=true, whether to store the conversation for future reference
 });
 
-console.log(response.usage); // here token getting. role, instruction ==> also. token+7, response tokens getting. total token getting. 
+// set context of answer in context
+context.push({  
+    role: 'assistant',
+    content: response.output_text
+})
+return response.output_text;
+}
+
+// console.log(response.usage); // here token getting. role, instruction ==> also. token+7, response tokens getting. total token getting. 
+
+
+// ask quest
+process.stdout.write('Ask a question: ');
+process.stdin.on('data', async (data) => {
+    const question = data.toString().trim();
+    if(question === 'exit') {
+        console.log('Exiting...');
+        process.exit(0);
+    }
+    const answer = await isAnswerComplete(question);
+    console.log('Answer:', answer);
+});
