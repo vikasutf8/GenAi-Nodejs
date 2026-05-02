@@ -1,1 +1,12 @@
 .env
+
+
+# This file is used to store environment variables for the project.
+# It should not be committed to version control, as it may contain sensitive information such as API keys, database credentials, etc.
+# Make sure to add this file to your .gitignore to prevent it from being tracked by Git.
+
+
+// Example of an environment variable
+node_modules/
+dist/
+.env 
