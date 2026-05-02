@@ -10,3 +10,13 @@
 - instructions: control on result [like : language changes]
 
 - Token
+
+
+## Audio to text
+-  Transcriptions feature
+
+- const file = fs.createReadStream('./audio.mp3');
+const prompt = 'Transcribe this audio file.';
+- const model = 'whisper-1'; // Specify the model to use for transcription (e.g., 'whisper-1')
+- const role = 'user';
+- const language = 'en'; // Specify the language of the audio file (e.g., 'en' for English)
