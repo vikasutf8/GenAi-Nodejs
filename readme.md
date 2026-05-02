@@ -10,3 +10,14 @@
 - instructions: control on result [like : language changes]
 
 - Token
+
+
+
+## Embedding:
+data---> number ---> store db[vector]
+dimensions
+generate from json 
+ ---> json -->arr --> embedded --> arr-> json
+
+DotProduct --> similiar 
+find ans--> most similiar at zero the index
