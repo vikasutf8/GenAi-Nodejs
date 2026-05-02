@@ -1,6 +1,10 @@
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import { encoding_for_model } from 'tiktoken';
+import {ChatOpenAI} from 'langchain'
+import { ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate } from 'langchain/prompts';
+import {StringOutputParser, CommaSeparatedOutputParser } from 'langchain/core/output_parsers';
+import { VectorStores } from 'openai/resources';
 
 dotenv.config();
 
@@ -8,36 +12,53 @@ const openai = process.env.OPENAI_API_KEY  || null;
 console.log(openai);
 
 
-const client = new OpenAI({ apiKey: openai });
+// const client = new OpenAI({ apiKey: openai });
 
+const model =new ChatOpenAI({
+    modelName: 'gpt-3.5-turbo',
+    openAIApiKey: openai,
+})
 
-const prompt = 'What is the capital of France?';
-const model = 'gpt-3.5-turbo';
-const role = 'user';
+async const vectorPrompt = new MemoryVectorStore(new OpenAIEmbeddings());
+await vectorPrompt.addDocuments([
+    {
+        id: '1',
+        text: 'What is the capital of France?',
+        metadata: { source: 'Wikipedia' },
+    },
+    {
+        id: '2',
+        text: 'The capital of France is Paris.',
+        metadata: { source: 'Wikipedia' },
+    },
+]);
 
-//calculate tokens of specific input wrt to model that i using ...as role also defined 
-const encoding = encoding_for_model(model); // 
-const tokens = encoding.encode(prompt); // get tokens for the prompt ONLY 'What is the capital of France?'
-
-console.log(`Number of tokens: ${tokens.length}`);
-
-
-const response= await client.responses.create({
-    model: model,
-    input: [
-        {
-            role: role,
-            content: prompt
-        },
-        // {
-        //     role: 'system',
-        //     content: 'The capital of France is Paris.'
-        // }
-    ],
-    temperature: 0.7, //bydefualt=1.0, higher values = more creative responses
-    max_output_tokens:20, //bydefualt=2048, maximum number of tokens in the responses
-    store_history: false, //bydefualt=true, whether to store the conversation history for future reference
-    store: false, //bydefualt=true, whether to store the conversation for future reference
+const vectorRetriever = vectorPrompt.asRetriever();
+vectorRetriever.getRelevantDocuments('What is the capital of France?').then((docs) => {
+    console.log(docs);
 });
 
-console.log(response.usage); // here token getting. role, instruction ==> also. token+7, response tokens getting. total token getting. 
+await vectorPrompt.addDocuments(
+    new Document({
+        id: '3',
+        text: 'The capital of France is Paris.',
+        metadata: { source: 'Wikipedia' },
+    })
+)
+
+
+const chain= prompt.pipe(model);
+async function main() {
+const prompt = ChatPromptTemplate.fromMessages([
+   [SystemMessagePromptTemplate.fromTemplate("You are a helpful assistant that translates English to French."),
+    HumanMessagePromptTemplate.fromTemplate("{input}")]
+]);
+//"{input}" === {input:
+const formatedMsg = await prompt.formatPromptValue({input: "What is the capital of France?"}).format();
+console.log(formatedMsg);
+
+
+   const response = await model.invoke(formatedMsg);
+   console.log(response); 
+}
+main
