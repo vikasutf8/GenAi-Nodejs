@@ -14,11 +14,30 @@ const openai = process.env.OPENAI_API_KEY  || null;
 console.log(openai);
 const client = new OpenAI({ apiKey: openai });
 
-const file = fs.createReadStream('./audio.mp3');
-const prompt = 'Transcribe this audio file.';
-const model = 'whisper-1'; // Specify the model to use for transcription (e.g.,'whisper-1')
-const role = 'user';
-const language = 'en'; // Specify the language of the audio file (e.g., 'en' for English)
+// const file = fs.createReadStream('./audio.mp3');
+// const prompt = 'Transcribe this audio file.';
+// const model = 'whisper-1'; // Specify the model to use for transcription (e.g.,'whisper-1')
+// const role = 'user';
+// const language = 'en'; // Specify the language of the audio file (e.g., 'en' for English)
+
+
+/**
+ * 
+ * text to audio * const response = await client.audio.speech.create({
+    model: 'tts-1',
+    input: 'Hello, how are you?',
+    voice: 'alloy', // Specify the voice to use for synthesis (e.g., 'alloy')
+    format: 'mp3' // Specify the output format (e.g., 'mp3')
+  });
+ * 
+ */
+
+  const model = 'gpt-4o'; // Specify the model to use for transcription (e.g.,'whisper-1')
+    const prompt = 'What is the capital of France?';
+    const language = 'en'; // Specify the language of the audio file (e.g., 'en' for English)
+    const voice = 'alloy'; // Specify the voice to use for synthesis (e.g., 'alloy')
+
+
 
 //calculate tokens of specific input wrt to model that i using ...as role also defined 
 const encoding = encoding_for_model(model); 
@@ -33,41 +52,41 @@ app.get('/', (req, res) => {
     res.send('Hello World!');
 });
 
-app.get('/file', (req, res) => {
-    //basic html form to upload file
-    res.send(`
-        <form action="/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="audio" />
-            <button type="submit">Upload</button>
-        </form>
-    `);
-    });
+// app.get('/file', (req, res) => {
+//     //basic html form to upload file
+//     res.send(`
+//         <form action="/upload" method="post" enctype="multipart/form-data">
+//             <input type="file" name="audio" />
+//             <button type="submit">Upload</button>
+//         </form>
+//     `);
+//     });
 
-app.post('/upload', (req, res) => {
-    //handle file upload using multer
+// app.post('/upload', (req, res) => {
+//     //handle file upload using multer
 
-    const upload = multer({ dest: 'uploads/' });
-    upload.single('audio')(req, res, async (err) => {
-        if (err) {
-            return res.status(500).send('Error uploading file.');
-        }
-        const filePath = req.file.path;
-        console.log(filePath);
-        // now send this file path to openai for transcription
-        const response= await client.audio.transcriptions.create({
-            model: model,
-            file: fs.createReadStream(filePath), 
-            language: language,
-            prompt: prompt,
-            role: role   
+//     const upload = multer({ dest: 'uploads/' });
+//     upload.single('audio')(req, res, async (err) => {
+//         if (err) {
+//             return res.status(500).send('Error uploading file.');
+//         }
+//         const filePath = req.file.path;
+//         console.log(filePath);
+//         // now send this file path to openai for transcription
+//         const response= await client.audio.transcriptions.create({
+//             model: model,
+//             file: fs.createReadStream(filePath), 
+//             language: language,
+//             prompt: prompt,
+//             role: role   
 
-        });
-        console.log(response.text);
-        res.send(response.text);
+//         });
+//         console.log(response.text);
+//         res.send(response.text);
 
-        // writeFileSync('./transcription.txt', response.text, 'utf-8');
-    });
-});
+//         // writeFileSync('./transcription.txt', response.text, 'utf-8');
+//     });
+// });
 
 
 // const response= await client.audio.transcriptions.create({
@@ -83,3 +102,20 @@ app.post('/upload', (req, res) => {
 // return response.text;
 
 // writeFileSync('./transcription.txt', response.text, 'utf-8');
+
+
+
+
+const response = await client.audio.speech.create({
+    model: model,
+    input: prompt,
+    voice: voice,
+    format: 'mp3'
+});
+const baseResponse = response.arrayBuffer();
+const buffer = Buffer.from(baseResponse);
+fs.writeFileSync('output.mp3', buffer);
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
